@@ -24,6 +24,9 @@ npm-debug.log*
 # Dependencies (if any added later)
 node_modules/
 
+# Bun
+bun.lockb
+
 # Build output (if build step added later)
 dist/
 build/

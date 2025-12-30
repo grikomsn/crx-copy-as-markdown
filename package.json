@@ -1,0 +1,27 @@
+{
+  "name": "crx-copy-as-markdown",
+  "version": "1.0.0",
+  "description": "Copy web page, selection, or link as Markdown via context menu",
+  "type": "module",
+  "scripts": {
+    "prebuild": "bun run scripts/prebuild.js",
+    "build": "bun run scripts/build.js",
+    "postbuild": "bun run scripts/postbuild.js",
+    "clean": "rm -rf dist",
+    "version": "bun run scripts/version.js"
+  },
+  "devDependencies": {},
+  "keywords": [
+    "chrome-extension",
+    "markdown",
+    "clipboard",
+    "web-clipper",
+    "turndown"
+  ],
+  "author": "Griko Nibras",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/grikomsn/crx-copy-as-markdown.git"
+  }
+}
