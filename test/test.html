@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Copy as Markdown Test Page</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; }
+    code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; }
+    pre { background: #f4f4f4; padding: 16px; border-radius: 4px; overflow-x: auto; }
+    table { border-collapse: collapse; margin: 20px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px 12px; }
+    th { background: #f4f4f4; }
+    .test-section { margin: 30px 0; padding: 20px; border: 1px solid #eee; border-radius: 8px; }
+  </style>
+</head>
+<body>
+
+<h1>Copy as Markdown Test Page</h1>
+
+<p>This page tests various HTML elements and their Markdown conversion.</p>
+
+<div class="test-section">
+  <h2>Basic Formatting</h2>
+  <p>This is <strong>bold text</strong> and this is <em>italic text</em>.</p>
+  <p>This has <code>inline code</code> in the middle.</p>
+  <p>Here's a line<br>with a break in it.</p>
+</div>
+
+<div class="test-section">
+  <h2>Links</h2>
+  <p>Visit <a href="https://example.com">Example Site</a> for more info.</p>
+  <p>Auto-link: <a href="https://github.com">https://github.com</a></p>
+  <p>Email: <a href="mailto:test@example.com">test@example.com</a></p>
+  <p>Link with title: <a href="https://example.com" title="Example Title">Titled Link</a></p>
+</div>
+
+<div class="test-section">
+  <h2>Lists</h2>
+  <h3>Unordered List</h3>
+  <ul>
+    <li>Item one</li>
+    <li>Item two</li>
+    <li>Item three with <strong>bold</strong></li>
+  </ul>
+
+  <h3>Ordered List</h3>
+  <ol>
+    <li>First item</li>
+    <li>Second item</li>
+    <li>Third item</li>
+  </ol>
+</div>
+
+<div class="test-section">
+  <h2>Code Blocks</h2>
+  <pre><code class="language-javascript">function hello() {
+  console.log("Hello, World!");
+  return true;
+}</code></pre>
+
+  <pre><code>Plain code block
+without language hint</code></pre>
+</div>
+
+<div class="test-section">
+  <h2>Tables</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>id</td>
+        <td>string</td>
+        <td>Unique identifier</td>
+      </tr>
+      <tr>
+        <td>name</td>
+        <td>string</td>
+        <td>Display name</td>
+      </tr>
+      <tr>
+        <td>active</td>
+        <td>boolean</td>
+        <td>Is active flag</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="test-section">
+  <h2>Images</h2>
+  <p>Here's an image:</p>
+  <img src="https://via.placeholder.com/150" alt="Placeholder Image" title="A placeholder">
+</div>
+
+<div class="test-section">
+  <h2>Blockquotes</h2>
+  <blockquote>
+    <p>This is a quoted paragraph.</p>
+    <p>It has multiple lines.</p>
+  </blockquote>
+</div>
+
+<div class="test-section">
+  <h2>Special Characters</h2>
+  <p>Smart quotes: "Hello" and 'World'</p>
+  <p>Dashes: en–dash and em—dash</p>
+  <p>Ellipsis: And then…</p>
+  <p>Superscript: x<sup>2</sup> + y<sup>2</sup></p>
+  <p>Subscript: H<sub>2</sub>O</p>
+</div>
+
+<div class="test-section">
+  <h2>Mixed Content</h2>
+  <p>This paragraph has <strong>bold</strong>, <em>italic</em>, <code>code</code>, 
+     and a <a href="https://example.com">link</a> all together.</p>
+</div>
+
+</body>
+</html>
