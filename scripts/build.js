@@ -2,8 +2,8 @@
 
 import { existsSync, mkdirSync, readFileSync } from 'fs';
 import { execSync } from 'child_process';
+import * as esbuild from 'esbuild';
 
-// ANSI color codes
 const colors = {
   reset: '\x1b[0m',
   green: '\x1b[32m',
@@ -22,33 +22,76 @@ const log = {
 console.log(`\n${colors.bold}Building Chrome Extension${colors.reset}\n`);
 
 try {
-  // Read version from package.json
   const packageJson = JSON.parse(readFileSync('package.json', 'utf-8'));
   const version = packageJson.version;
-  const zipName = `copy-as-markdown-v${version}.zip`;
   const distDir = 'dist';
-  const zipPath = `${distDir}/${zipName}`;
+  const bundleDir = `${distDir}/bundled`;
 
-  // Create dist directory (clean if exists)
   if (existsSync(distDir)) {
     log.info('Cleaning existing dist directory...');
     execSync(`rm -rf ${distDir}`);
   }
-  
-  mkdirSync(distDir, { recursive: true });
+
+  mkdirSync(bundleDir, { recursive: true });
   log.success('Created dist directory');
 
-  // Build zip file using native zip command
+  log.info('Bundling JavaScript with esbuild...');
+
+  await esbuild.build({
+    entryPoints: ['src/content.js'],
+    bundle: true,
+    outfile: `${bundleDir}/content.js`,
+    minify: true,
+    sourcemap: false,
+    target: ['es2020'],
+    format: 'iife',
+    platform: 'browser',
+    define: {
+      'process.env.NODE_ENV': '"production"'
+    },
+    loader: {
+      '.js': 'js'
+    },
+    external: ['chrome']
+  });
+
+  await esbuild.build({
+    entryPoints: ['popup/popup.js'],
+    bundle: true,
+    outfile: `${bundleDir}/popup.js`,
+    minify: true,
+    sourcemap: false,
+    target: ['es2020'],
+    format: 'iife',
+    platform: 'browser',
+    define: {
+      'process.env.NODE_ENV': '"production"'
+    },
+    loader: {
+      '.js': 'js'
+    },
+    external: ['chrome']
+  });
+
+  log.success('Bundled JavaScript files');
+
+  const zipName = `copy-as-markdown-v${version}.zip`;
+  const zipPath = `${distDir}/${zipName}`;
+
   log.info('Creating ZIP archive...');
-  
-  const zipCommand = `zip -r "${zipPath}" \
+
+  execSync('cp manifest.json LICENSE dist/ && cp -r icons lib popup src dist/');
+  log.success('Copied manifest.json, LICENSE, icons, lib, and src to dist/');
+
+  const zipCommand = `cd "${distDir}" && zip -r "${zipName}" \
     manifest.json \
     LICENSE \
+    icons/ \
+    lib/ \
     src/ \
     popup/ \
-    lib/ \
-    icons/ \
-    -x "*.DS_Store" "**/.DS_Store" "**/.*"`;
+    bundled/ \
+    -x "*.DS_Store" "**/.DS_Store"`;
 
   try {
     execSync(zipCommand, { stdio: 'pipe' });
@@ -58,10 +101,6 @@ try {
     console.error(error.message);
     process.exit(1);
   }
-
-  // Copy manifest.json to dist for inspection
-  execSync('cp manifest.json dist/manifest.json');
-  log.success('Copied manifest.json to dist/');
 
   console.log();
   console.log(`${colors.green}${colors.bold}✓ Build completed successfully${colors.reset}`);
