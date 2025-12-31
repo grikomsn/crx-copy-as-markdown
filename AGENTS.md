@@ -10,10 +10,10 @@ A Chrome extension (Manifest V3) that copies web pages, selections, links, or in
 
 **Use Bun instead of Node.js, npm, pnpm, or vite.**
 
-- Use `bun <file>` instead of `node <file>`
-- Use `bun install` instead of `npm install`
-- Use `bun run <script>` instead of `npm run <script>`
-- Use `bunx <package>` instead of `npx <package>`
+- `bun <file>` instead of `node <file>` or `ts-node <file>`
+- `bun install` instead of `npm install` or `yarn install` or `pnpm install`
+- `bun run <script>` instead of `npm run <script>` or `yarn run <script>` or `pnpm run <script>`
+- `bunx <package>` instead of `npx <package>`
 - Bun automatically loads `.env` files
 
 ## Build/Lint/Test Commands
@@ -53,6 +53,20 @@ bun run clean        # Clean dist folder
 bun run version      # Update version
 ```
 
+### Build Verification
+
+**Always run `bun run build` and verify success after making changes.** The build creates the `dist/` folder with all files needed for the extension.
+
+```bash
+bun run build
+```
+
+After building, verify:
+- `dist/` folder exists with all expected files
+- `dist/sidepanel/sidepanel.html` reflects your changes
+- `dist/css/base.css` and `dist/sidepanel/sidepanel.css` are correct
+- ZIP file created at `dist/copy-as-markdown-v*.zip` (47 KB, ~22 files)
+
 ### Linting
 
 No linter is configured. If adding one, use ESLint with browser globals:
@@ -72,6 +86,7 @@ No linter is configured. If adding one, use ESLint with browser globals:
 - **Plain JavaScript (ES2021+)** - No TypeScript compilation
 - **TypeScript definitions** in `src/types.d.ts` for IDE support only
 - Target: Chrome extension environment (Manifest V3)
+- **CSS**: Shared styles in `css/base.css`, page-specific styles in `popup/popup.css` and `sidepanel/sidepanel.css`
 
 ### File Organization
 
@@ -81,7 +96,9 @@ No linter is configured. If adding one, use ESLint with browser globals:
 | `content.js` | Content script + element picker | DOM + `window.toMarkdown` |
 | `toMarkdown.js` | Conversion logic | Exposes `window.toMarkdown` |
 | `popup/popup.js` | Settings UI | DOM + Chrome storage API |
+| `sidepanel/sidepanel.js` | Side panel UI | DOM + Chrome storage API |
 | `lib/turndown.js` | Vendor library | `TurndownService` |
+| `css/base.css` | Shared styles | Font-face, common components |
 
 ### Formatting
 
@@ -124,6 +141,7 @@ function toMarkdown(html, options = {}) { }
 - No ES module imports in source files (loaded directly by Chrome)
 - Vendor libraries in `lib/` folder (do not modify)
 - External dependencies: Turndown (in `lib/turndown.js`)
+- CSS: Use `<link>` in HTML files to import base.css before page-specific CSS
 
 ### Error Handling
 
