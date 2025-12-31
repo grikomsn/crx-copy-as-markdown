@@ -73,6 +73,24 @@ try {
     external: ['chrome']
   });
 
+  await esbuild.build({
+    entryPoints: ['sidepanel/sidepanel.js'],
+    bundle: true,
+    outfile: `${bundleDir}/sidepanel.js`,
+    minify: true,
+    sourcemap: false,
+    target: ['es2020'],
+    format: 'iife',
+    platform: 'browser',
+    define: {
+      'process.env.NODE_ENV': '"production"'
+    },
+    loader: {
+      '.js': 'js'
+    },
+    external: ['chrome']
+  });
+
   log.success('Bundled JavaScript files');
 
   const zipName = `copy-as-markdown-v${version}.zip`;
@@ -80,16 +98,18 @@ try {
 
   log.info('Creating ZIP archive...');
 
-  execSync('cp manifest.json LICENSE dist/ && cp -r icons lib popup src dist/');
-  log.success('Copied manifest.json, LICENSE, icons, lib, and src to dist/');
+  execSync('cp manifest.json LICENSE dist/ && cp -r icons lib css popup sidepanel src dist/');
+  log.success('Copied manifest.json, LICENSE, icons, lib, css, popup, sidepanel, and src to dist/');
 
   const zipCommand = `cd "${distDir}" && zip -r "${zipName}" \
     manifest.json \
     LICENSE \
     icons/ \
     lib/ \
+    css/ \
     src/ \
     popup/ \
+    sidepanel/ \
     bundled/ \
     -x "*.DS_Store" "**/.DS_Store"`;
 
