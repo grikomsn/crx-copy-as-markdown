@@ -4,32 +4,19 @@ This document provides guidelines for AI coding agents working on the Copy as Ma
 
 ## Project Overview
 
-A Chrome extension (Manifest V3) that adds context menu options to copy web pages, selections, or links as Markdown. Uses plain JavaScript with TypeScript definitions for IDE support. No build step required - files are loaded directly by the browser.
+A Chrome extension (Manifest V3) that copies web pages, selections, links, or individual elements as Markdown. Uses plain JavaScript with TypeScript definitions for IDE support. No build step required for development.
 
-## Project Structure
+## Runtime Preference
 
-```
-crx-copy-as-markdown/
-├── manifest.json           # Chrome Extension Manifest V3
-├── src/
-│   ├── background.js       # Service worker (context menus, notifications)
-│   ├── content.js          # Content script (DOM access, clipboard)
-│   ├── toMarkdown.js       # HTML→Markdown conversion (Turndown + custom rules)
-│   └── types.d.ts          # TypeScript definitions for IDE support
-├── popup/
-│   ├── popup.html          # Settings UI
-│   ├── popup.js            # Settings logic
-│   └── popup.css           # Settings styles
-├── lib/
-│   └── turndown.js         # Turndown library (vendor, do not modify)
-├── icons/                  # Extension icons (16, 48, 128px)
-└── test/
-    └── test.html           # Manual testing page
-```
+**Use Bun instead of Node.js, npm, pnpm, or vite.**
+
+- Use `bun <file>` instead of `node <file>`
+- Use `bun install` instead of `npm install`
+- Use `bun run <script>` instead of `npm run <script>`
+- Use `bunx <package>` instead of `npx <package>`
+- Bun automatically loads `.env` files
 
 ## Build/Lint/Test Commands
-
-This project has **no build step**. Files are plain JavaScript loaded directly by Chrome.
 
 ### Loading the Extension
 
@@ -42,24 +29,35 @@ chrome://extensions/
 # 4. Select the crx-copy-as-markdown folder
 ```
 
-### Manual Testing
+### Development Testing
 
 ```bash
 # Open test page in browser
 open test/test.html
 
-# Test actions:
-# - Right-click page → "Copy Page as Markdown"
-# - Select text, right-click → "Copy Selection as Markdown"
-# - Right-click link → "Copy Link as Markdown"
+# Test all features:
+# - Context menu: Copy Page/Selection/Link as Markdown
+# - Element picker: Alt+M or popup button to toggle
+# - Keyboard: Esc to exit picker mode
 ```
 
-### Linting (Optional)
+### Build Commands (Optional)
+
+Uses Bun + esbuild for bundling (not required for dev):
+
+```bash
+bun run build        # Main build
+bun run prebuild     # Pre-build tasks
+bun run postbuild    # Post-build tasks
+bun run clean        # Clean dist folder
+bun run version      # Update version
+```
+
+### Linting
 
 No linter is configured. If adding one, use ESLint with browser globals:
 
-```javascript
-// Suggested .eslintrc.json
+```json
 {
   "env": { "browser": true, "webextensions": true, "es2021": true },
   "parserOptions": { "ecmaVersion": "latest" },
@@ -80,9 +78,10 @@ No linter is configured. If adding one, use ESLint with browser globals:
 | File | Purpose | Global Scope |
 |------|---------|--------------|
 | `background.js` | Service worker | Chrome APIs only |
-| `content.js` | Content script | DOM + `window.toMarkdown` |
+| `content.js` | Content script + element picker | DOM + `window.toMarkdown` |
 | `toMarkdown.js` | Conversion logic | Exposes `window.toMarkdown` |
 | `popup/popup.js` | Settings UI | DOM + Chrome storage API |
+| `lib/turndown.js` | Vendor library | `TurndownService` |
 
 ### Formatting
 
@@ -98,18 +97,12 @@ No linter is configured. If adding one, use ESLint with browser globals:
 // Functions: camelCase, verb prefix
 function getSelectionHtml() { }
 function formatMarkdownOutput() { }
-async function copyToClipboard(text) { }
 
 // Constants: UPPER_SNAKE_CASE
 const DEFAULT_SETTINGS = { };
-const SETTING_IDS = [ ];
 
-// Variables: camelCase
-let borderCells = '';
-const alignMap = { left: ':--' };
-
-// DOM IDs: camelCase (match JS variable names)
-document.getElementById('headingStyle');
+// Context menu IDs: camelCase strings
+chrome.contextMenus.create({ id: 'copyPageAsMarkdown' });
 ```
 
 ### Function Documentation
@@ -126,10 +119,16 @@ Use JSDoc comments for all exported/significant functions:
 function toMarkdown(html, options = {}) { }
 ```
 
+### Imports/Dependencies
+
+- No ES module imports in source files (loaded directly by Chrome)
+- Vendor libraries in `lib/` folder (do not modify)
+- External dependencies: Turndown (in `lib/turndown.js`)
+
 ### Error Handling
 
 ```javascript
-// Async functions: try-catch with user-friendly messages
+// Async functions: try-catch with graceful fallbacks
 async function getSettings() {
   try {
     const stored = await chrome.storage.sync.get('settings');
@@ -151,31 +150,14 @@ sendResponse({ success: true });
 // Message listener - must return true for async response
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   (async () => {
-    // ... async work
     sendResponse({ success: true });
   })();
-  return true; // Required for async sendResponse
+  return true;
 });
-
-// Context menu IDs: camelCase strings
-chrome.contextMenus.create({ id: 'copyPageAsMarkdown' });
 
 // Storage: nest under 'settings' key
 await chrome.storage.sync.set({ settings });
 await chrome.storage.sync.get('settings');
-```
-
-### Turndown Rules
-
-When adding custom Turndown rules, follow this pattern:
-
-```javascript
-turndownService.addRule('ruleName', {
-  filter: 'tagName',  // or ['tag1', 'tag2'] or function(node)
-  replacement: function(content, node, options) {
-    return 'markdown output';
-  }
-});
 ```
 
 ### Settings Synchronization
@@ -186,15 +168,6 @@ Settings must be consistent across files. When modifying:
 2. Update `DEFAULT_SETTINGS` in `popup/popup.js`
 3. Update `Settings` interface in `src/types.d.ts`
 4. Update form fields in `popup/popup.html`
-
-Current settings:
-- `headingStyle`: 'atx' | 'setext'
-- `bulletListMarker`: '-' | '*' | '+'
-- `codeBlockStyle`: 'fenced' | 'indented'
-- `linkStyle`: 'inlined' | 'referenced'
-- `imageHandling`: 'keep' | 'skip'
-- `includePageTitle`: boolean
-- `includeSourceUrl`: boolean
 
 ## Key Implementation Notes
 
@@ -207,18 +180,12 @@ Scripts are loaded in order (see `manifest.json`):
 
 ### Text Normalization
 
-The `escapeText()` function in `toMarkdown.js` preserves newlines while normalizing:
-- Smart quotes → straight quotes
-- Em/en dashes → hyphens
-- Collapse 3+ newlines to 2
-- Remove trailing whitespace per line
-
-**Do not** collapse all whitespace - this breaks markdown formatting.
+The `escapeText()` function preserves newlines while normalizing smart punctuation and dashes. **Do not** collapse all whitespace - this breaks markdown formatting.
 
 ### Restricted Pages
 
-The extension cannot run on `chrome://` or `chrome-extension://` pages. This is handled in `background.js`.
+The extension cannot run on `chrome://` or `chrome-extension://` pages.
 
 ## Reference Implementation
 
-This extension is adapted from [vscode-markdown-paste-image](https://github.com/telesoho/vscode-markdown-paste-image). When in doubt about Markdown conversion behavior, refer to `src/toMarkdown.ts` in that repository.
+This extension is adapted from [vscode-markdown-paste-image](https://github.com/telesoho/vscode-markdown-paste-image).
