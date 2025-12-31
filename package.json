@@ -10,7 +10,9 @@
     "clean": "rm -rf dist",
     "version": "bun run scripts/version.js"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "esbuild": "^0.27.2"
+  },
   "keywords": [
     "chrome-extension",
     "markdown",
