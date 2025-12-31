@@ -17,15 +17,13 @@ on:
           - minor
           - major
 
-env:
-  EXT_DIR: extension-build
-
 jobs:
-  build-and-sign:
+  build:
     runs-on: ubuntu-latest
+    container:
+      image: catthew/chrome-headless-shell:latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -36,52 +34,99 @@ jobs:
           VERSION=$(node -p 'require("./package.json").version')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Create extension directory
-        run: mkdir -p ${{ env.EXT_DIR }}
+      - name: Build extension
+        run: bun run build
 
-      - name: Copy extension files
+      - name: Sign with Chrome
         run: |
-          cp manifest.json ${{ env.EXT_DIR }}/
-          cp LICENSE ${{ env.EXT_DIR }}/
-          cp -r src/ popup/ lib/ icons/ ${{ env.EXT_DIR }}/
+          google-chrome --pack-extension=dist/copy-as-markdown-v${{ steps.version.outputs.version }} --pack-extension-key=<(echo "${{ secrets.PRIVATE_KEY_PEM }}")
 
-      - name: Write private key
-        run: echo "${{ secrets.PRIVATE_KEY_PEM }}" > ${{ env.EXT_DIR }}/privkey.pem && chmod 600 ${{ env.EXT_DIR }}/privkey.pem
-
-      - name: Build ZIP
-        run: |
-          cd ${{ env.EXT_DIR }}
-          zip -r ../extension.zip . -x "*.DS_Store" "**/.DS_Store"
-
-      - name: Install CRX signing tool
-        run: bun i -g crx3
-
-      - name: Sign CRX
-        run: |
-          cd ${{ env.EXT_DIR }}
-          crx3 sign --private-key privkey.pem --packer-tool zip --output ../extension.crx --zip-path ../extension.zip
+      - name: Rename CRX
+        run: mv dist/copy-as-markdown-v${{ steps.version.outputs.version }}.crx dist/extension.crx
 
       - name: Generate checksum
-        run: |
-          cd ${{ env.EXT_DIR }}
-          sha256sum extension.crx > extension.crx.sha256
-          cat extension.crx.sha256
+        run: sha256sum dist/extension.crx > dist/extension.crx.sha256
 
-      - name: Upload artifacts
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: signed-crx
-          path: |
+          path: dist/
+
+  upload-cws:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: signed-crx
+
+      - name: Get access token
+        id: token
+        run: |
+          CLIENT_ID=$(echo '${{ secrets.GOOGLE_OAUTH_JSON }}' | jq -r '.web.client_id')
+          CLIENT_SECRET=$(echo '${{ secrets.GOOGLE_OAUTH_JSON }}' | jq -r '.web.client_secret')
+
+          RESPONSE=$(curl -s "https://oauth2.googleapis.com/token" \
+            -d "client_id=$CLIENT_ID" \
+            -d "client_secret=$CLIENT_SECRET" \
+            -d "refresh_token=${{ secrets.GOOGLE_REFRESH_TOKEN }}" \
+            -d "grant_type=refresh_token")
+
+          echo "access_token=$(echo $RESPONSE | jq -r '.access_token')" >> $GITHUB_OUTPUT
+
+      - name: Upload to CWS
+        run: |
+          curl -H "Authorization: Bearer ${{ steps.token.outputs.access_token }}" \
+            -H "X-Goog-Upload-Protocol: raw" \
+            -H "X-Goog-Upload-File-Name: extension.crx" \
+            -X POST \
+            -T extension.crx \
+            "https://chromewebstore.googleapis.com/upload/v2/publishers/${{ vars.CWS_PUBLISHER_ID }}/items/${{ vars.CWS_EXTENSION_ID }}:upload"
+
+      - name: Publish
+        run: |
+          curl -H "Authorization: Bearer ${{ steps.token.outputs.access_token }}" \
+            -X POST \
+            "https://chromewebstore.googleapis.com/v2/publishers/${{ vars.CWS_PUBLISHER_ID }}/items/${{ vars.CWS_EXTENSION_ID }}:publish"
+
+  create-release:
+    needs: upload-cws
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: signed-crx
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          files: |
             extension.crx
             extension.crx.sha256
+          body: |
+            ## Installation
+
+            1. Download the `.crx` file
+            2. Open [chrome://extensions/](chrome://extensions/)
+            3. Enable **Developer mode**
+            4. Drag and drop the `.crx` file onto the page
+
+            ## Verification
+
+            ```bash
+            sha256sum -c extension.crx.sha256
+            ```
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   bump-version:
-    needs: build-and-sign
+    needs: create-release
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -98,51 +143,3 @@ jobs:
           git tag "v$(node -p 'require("./package.json").version')"
           git push
           git push --tags
-
-  create-release:
-    needs: build-and-sign
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: signed-crx
-
-      - name: Get version
-        id: version
-        run: |
-          VERSION=$(node -p 'require("./package.json").version')
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ steps.version.outputs.version }}
-          name: Copy as Markdown v${{ steps.version.outputs.version }}
-          draft: true
-          files: |
-            extension.crx
-            extension.crx.sha256
-          body: |
-            ## Installation
-
-            1. Download the `.crx` file
-            2. Open [chrome://extensions/](chrome://extensions/)
-            3. Enable **Developer mode**
-            4. Drag and drop the `.crx` file onto the page
-
-            ## Files
-
-            - `extension.crx` - Signed CRX for Chrome Web Store upload
-            - `extension.crx.sha256` - Checksum for verification
-
-            ## Verification
-
-            ```bash
-            sha256sum -c extension.crx.sha256
-            ```
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
