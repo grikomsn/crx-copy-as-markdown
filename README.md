@@ -4,15 +4,19 @@
 [![Chrome Web Store](https://img.shields.io/badge/Chrome-Web%20Store-blue?logo=google-chrome)](https://github.com/grikomsn/crx-copy-as-markdown)
 [![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](https://github.com/grikomsn/crx-copy-as-markdown/releases)
 
-A Chrome extension that adds context menu options to copy web pages, selections, or links as Markdown.
+<img src=".github/assets/thumbnail.png" alt="Copy as Markdown" width="400" align="right">
 
-## Features
+A Chrome extension that adds context menu options to copy web pages, selections, or links as Markdown.
 
 - **Copy Page as Markdown** - Convert entire page to Markdown with optional title and source URL
 - **Copy Selection as Markdown** - Convert selected text/HTML to Markdown
 - **Copy Link as Markdown** - Copy any link in `[text](url)` format
 
-### Conversion Features
+> **Built with [OpenCode](https://opencode.ai/)** - View the initial project session at <https://opncd.ai/share/5xIUkufm>
+
+<br clear="right">
+
+## Conversion Features
 
 - Smart HTML to Markdown conversion using [Turndown](https://github.com/mixmark-io/turndown)
 - Table support with colspan handling
@@ -27,41 +31,45 @@ A Chrome extension that adds context menu options to copy web pages, selections,
 ### From Source (Developer Mode)
 
 1. Clone or download this repository:
+
    ```bash
    git clone https://github.com/grikomsn/crx-copy-as-markdown.git
    ```
+
 2. Open Chrome and go to `chrome://extensions/`
+
 3. Enable "Developer mode" (toggle in top right)
+
 4. Click "Load unpacked"
+
 5. Select the `crx-copy-as-markdown` folder
 
 ### From Chrome Web Store
 
-*(Coming soon)*
+_(Coming soon)_
 
 ## Usage
 
-### Context Menu
+### Context Menu & Settings
 
-Right-click on any web page to access:
+| Feature | Description | Screenshot |
+|---|---|---|
+| **Copy Page as Markdown** | Available on any page | <img src=".github/assets/copy-page.jpg" alt="Copy Page as Markdown" width="280"> |
+| **Copy Selection as Markdown** | Available when text is selected | <img src=".github/assets/copy-selection.jpg" alt="Copy Selection as Markdown" width="280"> |
+| **Copy Link as Markdown** | Available when right-clicking on a link | <img src=".github/assets/copy-link.jpg" alt="Copy Link as Markdown" width="280"> |
+| **Settings** | Click the extension icon to configure Markdown conversion options | <img src=".github/assets/popup.jpg" alt="Extension popup" width="280"> |
 
-- **Copy Page as Markdown** - Available on any page
-- **Copy Selection as Markdown** - Available when text is selected
-- **Copy Link as Markdown** - Available when right-clicking on a link
+#### Conversion Options
 
-### Settings
-
-Click the extension icon to configure:
-
-| Setting | Options | Default |
-|---------|---------|---------|
-| Heading Style | `# Heading` (atx) / `Heading` with underline (setext) | atx |
-| Bullet List Marker | `-` / `*` / `+` | `-` |
-| Code Block Style | Fenced (```) / Indented | Fenced |
-| Link Style | Inlined / Referenced | Inlined |
-| Image Handling | Keep (absolute URL) / Skip | Keep |
-| Include Page Title | Yes / No | Yes |
-| Include Source URL | Yes / No | Yes |
+| Setting            | Options                                               | Default |
+| ------------------ | ----------------------------------------------------- | ------- |
+| Heading Style      | `# Heading` (atx) / `Heading` with underline (setext) | atx     |
+| Bullet List Marker | `-` / `*` / `+`                                       | `-`     |
+| Code Block Style   | Fenced (```) / Indented                               | Fenced  |
+| Link Style         | Inlined / Referenced                                  | Inlined |
+| Image Handling     | Keep (absolute URL) / Skip                            | Keep    |
+| Include Page Title | Yes / No                                              | Yes     |
+| Include Source URL | Yes / No                                              | Yes     |
 
 ## Output Examples
 
@@ -73,6 +81,7 @@ Click the extension icon to configure:
 [Converted page content...]
 
 ---
+
 Source: https://example.com/page
 ```
 
