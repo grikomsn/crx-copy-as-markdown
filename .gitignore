@@ -34,4 +34,7 @@ build/
 # Package files
 *.zip
 *.crx
+
+# Private keys - never commit
 *.pem
+!*.pub

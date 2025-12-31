@@ -1,0 +1,148 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      bump_type:
+        description: 'Version bump type'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+env:
+  EXT_DIR: extension-build
+
+jobs:
+  build-and-sign:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Get version
+        id: version
+        run: |
+          VERSION=$(node -p 'require("./package.json").version')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create extension directory
+        run: mkdir -p ${{ env.EXT_DIR }}
+
+      - name: Copy extension files
+        run: |
+          cp manifest.json ${{ env.EXT_DIR }}/
+          cp LICENSE ${{ env.EXT_DIR }}/
+          cp -r src/ popup/ lib/ icons/ ${{ env.EXT_DIR }}/
+
+      - name: Write private key
+        run: echo "${{ secrets.PRIVATE_KEY_PEM }}" > ${{ env.EXT_DIR }}/privkey.pem && chmod 600 ${{ env.EXT_DIR }}/privkey.pem
+
+      - name: Build ZIP
+        run: |
+          cd ${{ env.EXT_DIR }}
+          zip -r ../extension.zip . -x "*.DS_Store" "**/.DS_Store"
+
+      - name: Install CRX signing tool
+        run: bun i -g crx3
+
+      - name: Sign CRX
+        run: |
+          cd ${{ env.EXT_DIR }}
+          crx3 sign --private-key privkey.pem --packer-tool zip --output ../extension.crx --zip-path ../extension.zip
+
+      - name: Generate checksum
+        run: |
+          cd ${{ env.EXT_DIR }}
+          sha256sum extension.crx > extension.crx.sha256
+          cat extension.crx.sha256
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: signed-crx
+          path: |
+            extension.crx
+            extension.crx.sha256
+
+  bump-version:
+    needs: build-and-sign
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Bump version
+        run: bun run version ${{ github.event.inputs.bump_type }}
+
+      - name: Commit and tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json manifest.json
+          git commit -m "chore: bump version to $(node -p 'require("./package.json").version')"
+          git tag "v$(node -p 'require("./package.json").version')"
+          git push
+          git push --tags
+
+  create-release:
+    needs: build-and-sign
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: signed-crx
+
+      - name: Get version
+        id: version
+        run: |
+          VERSION=$(node -p 'require("./package.json").version')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: Copy as Markdown v${{ steps.version.outputs.version }}
+          draft: true
+          files: |
+            extension.crx
+            extension.crx.sha256
+          body: |
+            ## Installation
+
+            1. Download the `.crx` file
+            2. Open [chrome://extensions/](chrome://extensions/)
+            3. Enable **Developer mode**
+            4. Drag and drop the `.crx` file onto the page
+
+            ## Files
+
+            - `extension.crx` - Signed CRX for Chrome Web Store upload
+            - `extension.crx.sha256` - Checksum for verification
+
+            ## Verification
+
+            ```bash
+            sha256sum -c extension.crx.sha256
+            ```
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
