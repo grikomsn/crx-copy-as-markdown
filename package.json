@@ -11,7 +11,7 @@
     "version": "bun run scripts/version.js"
   },
   "devDependencies": {
-    "esbuild": "^0.27.2"
+    "esbuild": "0.27.2"
   },
   "keywords": [
     "chrome-extension",
@@ -25,5 +25,6 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/grikomsn/crx-copy-as-markdown.git"
-  }
+  },
+  "packageManager": "bun@1.3.4"
 }
