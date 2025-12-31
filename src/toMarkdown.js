@@ -365,9 +365,25 @@ function toMarkdown(html, options = {}) {
   return markdown;
 }
 
+/**
+ * Convert a DOM element to Markdown
+ * @param {Element} element - DOM element to convert
+ * @param {Object} options - Conversion options
+ * @returns {string} Markdown string
+ */
+function toMarkdownFromElement(element, options = {}) {
+  if (!element || !(element instanceof Element)) {
+    return '';
+  }
+
+  const html = element.outerHTML;
+  return toMarkdown(html, options);
+}
+
 // Expose toMarkdown globally
 if (typeof window !== 'undefined') {
   window.toMarkdown = toMarkdown;
   window.toMarkdown.createMarkdownConverter = createMarkdownConverter;
   window.toMarkdown.escapeText = escapeText;
+  window.toMarkdown.fromElement = toMarkdownFromElement;
 }
