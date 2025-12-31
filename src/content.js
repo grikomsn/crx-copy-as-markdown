@@ -1,5 +1,5 @@
 import { getSettings } from './settings.js';
-import { copyToClipboard, formatMarkdownOutput } from './utils.js';
+import { copyToClipboard, formatMarkdownOutput, applyTextReplacements } from './utils.js';
 
 let isSelectMode = false;
 let highlightedElement = null;
@@ -116,12 +116,18 @@ async function handleSelectModeClick(e) {
   if (element) {
     try {
       const settings = await getSettings();
-      const html = element.outerHTML;
-      const markdown = toMarkdown(html, settings);
-      const formatted = formatMarkdownOutput(markdown, settings, {
+      let html = element.outerHTML;
+      const scope = 'page';
+
+      html = applyReplacements(html, settings, scope, 'pre');
+
+      let markdown = toMarkdown(html, settings);
+      let formatted = formatMarkdownOutput(markdown, settings, {
         title: document.title,
         url: window.location.href
       });
+
+      formatted = applyReplacements(formatted, settings, scope, 'post');
 
       await copyToClipboard(formatted);
 
@@ -233,24 +239,56 @@ function getPageHtml() {
   return clone.innerHTML;
 }
 
+function getScopeFromAction(action) {
+  switch (action) {
+    case 'copyPage':
+    case 'copyElement':
+      return 'page';
+    case 'copySelection':
+      return 'selection';
+    case 'copyLink':
+      return 'link';
+    default:
+      return 'all';
+  }
+}
+
+function applyReplacements(text, settings, scope, phase) {
+  if (!settings.textReplacements || !settings.textReplacements[phase]) {
+    return text;
+  }
+
+  const group = settings.textReplacements[phase];
+  if (!group.enabled || !Array.isArray(group.rules)) {
+    return text;
+  }
+
+  return applyTextReplacements(text, group.rules, scope);
+}
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   (async () => {
     try {
       switch (message.action) {
         case 'copyPage': {
           const settings = await getSettings();
-          const html = getPageHtml();
+          let html = getPageHtml();
 
           if (!html || html.trim().length === 0) {
             sendResponse({ success: false, error: 'No page content found' });
             return;
           }
 
-          const markdown = toMarkdown(html, settings);
-          const formatted = formatMarkdownOutput(markdown, settings, {
+          const scope = getScopeFromAction(message.action);
+          html = applyReplacements(html, settings, scope, 'pre');
+
+          let markdown = toMarkdown(html, settings);
+          let formatted = formatMarkdownOutput(markdown, settings, {
             title: document.title,
             url: window.location.href
           });
+
+          formatted = applyReplacements(formatted, settings, scope, 'post');
 
           await copyToClipboard(formatted);
           sendResponse({ success: true });
@@ -259,14 +297,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         case 'copySelection': {
           const settings = await getSettings();
-          const html = getSelectionHtml();
+          let html = getSelectionHtml();
 
           if (!html) {
             sendResponse({ success: false, error: 'No text selected' });
             return;
           }
 
-          const markdown = toMarkdown(html, settings);
+          const scope = getScopeFromAction(message.action);
+          html = applyReplacements(html, settings, scope, 'pre');
+
+          let markdown = toMarkdown(html, settings);
+          markdown = applyReplacements(markdown, settings, scope, 'post');
 
           await copyToClipboard(markdown);
           sendResponse({ success: true });
@@ -281,8 +323,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             return;
           }
 
-          const text = linkText && linkText.trim() ? linkText.trim() : linkUrl;
-          const markdown = `[${text}](${linkUrl})`;
+          const settings = await getSettings();
+          const scope = getScopeFromAction(message.action);
+
+          let text = linkText && linkText.trim() ? linkText.trim() : linkUrl;
+          let markdown = `[${text}](${linkUrl})`;
+
+          markdown = applyReplacements(markdown, settings, scope, 'post');
 
           await copyToClipboard(markdown);
           sendResponse({ success: true });
@@ -298,11 +345,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           }
 
           const settings = await getSettings();
-          const markdown = toMarkdown(elementHtml, settings);
-          const formatted = formatMarkdownOutput(markdown, settings, {
+          const scope = getScopeFromAction(message.action);
+
+          let html = elementHtml;
+          html = applyReplacements(html, settings, scope, 'pre');
+
+          let markdown = toMarkdown(html, settings);
+          let formatted = formatMarkdownOutput(markdown, settings, {
             title: document.title,
             url: window.location.href
           });
+
+          formatted = applyReplacements(formatted, settings, scope, 'post');
 
           await copyToClipboard(formatted);
           sendResponse({ success: true });

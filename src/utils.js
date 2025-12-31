@@ -45,3 +45,36 @@ export function formatMarkdownOutput(markdown, settings, pageInfo = {}) {
 export function createResponse(success, error = null) {
   return { success, ...(error && { error }) };
 }
+
+/**
+ * Apply text replacements to a string
+ * @param {string} text - Text to apply replacements to
+ * @param {Array} rules - Array of replacement rules
+ * @param {string} scope - Current copy scope ('page', 'selection', 'link')
+ * @returns {string} Text with replacements applied
+ */
+export function applyTextReplacements(text, rules, scope) {
+  if (!text || !Array.isArray(rules)) {
+    return text;
+  }
+
+  let result = text;
+
+  for (const rule of rules) {
+    if (!rule.enabled) continue;
+    if (rule.scope !== 'all' && rule.scope !== scope) continue;
+
+    try {
+      if (rule.useRegex) {
+        const regex = new RegExp(rule.pattern, 'g');
+        result = result.replace(regex, rule.replacement);
+      } else {
+        result = result.split(rule.pattern).join(rule.replacement);
+      }
+    } catch (error) {
+      console.warn('Invalid replacement rule:', rule, error);
+    }
+  }
+
+  return result;
+}
