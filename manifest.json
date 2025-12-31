@@ -8,7 +8,8 @@
     "activeTab",
     "clipboardWrite",
     "storage",
-    "notifications"
+    "notifications",
+    "commands"
   ],
   "background": {
     "service_worker": "src/background.js"
@@ -16,7 +17,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["lib/turndown.js", "src/toMarkdown.js", "src/content.js"]
+      "js": ["lib/turndown.js", "src/toMarkdown.js", "bundled/content.js"]
     }
   ],
   "action": {
@@ -31,5 +32,14 @@
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
+  },
+  "commands": {
+    "toggle-element-picker": {
+      "suggested_key": {
+        "default": "Alt+M",
+        "mac": "Option+M"
+      },
+      "description": "Toggle element picker mode"
+    }
   }
 }
