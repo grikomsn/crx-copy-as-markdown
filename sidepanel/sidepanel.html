@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Copy as Markdown Settings</title>
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="sidepanel.css">
+</head>
+<body>
+  <div class="picker-section">
+    <button id="toggle-picker" class="picker-button">
+      <span class="picker-icon">◉</span>
+      <span class="picker-text">Toggle Element Picker</span>
+    </button>
+    <p class="picker-hint">Press <kbd id="picker-shortcut">Alt+M</kbd> to pick any element</p>
+  </div>
+
+  <form id="settings-form">
+    <fieldset class="settings-section">
+      <legend>Markdown Formatting</legend>
+
+      <div class="form-group">
+        <label for="headingStyle">Heading Style</label>
+        <select id="headingStyle">
+          <option value="atx"># Heading (atx)</option>
+          <option value="setext">Heading with underline (setext)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="bulletListMarker">Bullet List Marker</label>
+        <select id="bulletListMarker">
+          <option value="-">- (dash)</option>
+          <option value="*">* (asterisk)</option>
+          <option value="+">+ (plus)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="codeBlockStyle">Code Block Style</label>
+        <select id="codeBlockStyle">
+          <option value="fenced">``` (fenced)</option>
+          <option value="indented">Indented</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="linkStyle">Link Style</label>
+        <select id="linkStyle">
+          <option value="inlined">Inlined</option>
+          <option value="referenced">Referenced</option>
+        </select>
+      </div>
+    </fieldset>
+
+    <fieldset class="settings-section">
+      <legend>Output Options</legend>
+
+      <div class="form-group">
+        <label for="imageHandling">Image Handling</label>
+        <select id="imageHandling">
+          <option value="keep">Keep with absolute URL</option>
+          <option value="skip">Skip images</option>
+        </select>
+      </div>
+
+      <div class="form-group toggle-group">
+        <label for="includePageTitle">Include Page Title</label>
+        <label class="toggle">
+          <input type="checkbox" id="includePageTitle">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="form-group toggle-group">
+        <label for="includeSourceUrl">Include Source URL</label>
+        <label class="toggle">
+          <input type="checkbox" id="includeSourceUrl">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </fieldset>
+  </form>
+
+  <div class="replacements-section">
+    <h2>Text Replacements</h2>
+
+    <div class="replacements-group">
+      <div class="replacements-group-header">
+        <span class="replacements-group-label">Pre-replacements (on HTML)</span>
+        <label class="toggle">
+          <input type="checkbox" id="pre-replacements-enabled">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div id="pre-replacements-list" class="replacements-list"></div>
+      <button id="add-pre-rule" class="add-rule-btn">+ Add Rule</button>
+    </div>
+
+    <div class="replacements-group">
+      <div class="replacements-group-header">
+        <span class="replacements-group-label">Post-replacements (on Markdown)</span>
+        <label class="toggle">
+          <input type="checkbox" id="post-replacements-enabled">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div id="post-replacements-list" class="replacements-list"></div>
+      <button id="add-post-rule" class="add-rule-btn">+ Add Rule</button>
+    </div>
+
+    <div class="replacements-actions">
+      <button id="export-replacements" class="action-btn">Export</button>
+      <button id="import-replacements" class="action-btn">Import</button>
+    </div>
+  </div>
+
+  <div id="rule-modal" class="modal">
+    <div class="modal-content">
+      <h3 id="modal-title">Add Replacement Rule</h3>
+      <input type="hidden" id="edit-rule-id">
+      <input type="hidden" id="edit-rule-phase">
+
+      <div class="form-group toggle-group">
+        <label for="rule-enabled">Enabled</label>
+        <label class="toggle">
+          <input type="checkbox" id="rule-enabled">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="form-group">
+        <label for="rule-scope">Scope</label>
+        <select id="rule-scope">
+          <option value="all">All</option>
+          <option value="page">Page only</option>
+          <option value="selection">Selection only</option>
+          <option value="link">Link only</option>
+        </select>
+      </div>
+
+      <div class="form-group toggle-group">
+        <label for="rule-use-regex">Use Regex</label>
+        <label class="toggle">
+          <input type="checkbox" id="rule-use-regex">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="form-group">
+        <label for="rule-pattern">Pattern</label>
+        <input type="text" id="rule-pattern" placeholder="Search pattern">
+      </div>
+
+      <div class="form-group">
+        <label for="rule-replacement">Replacement</label>
+        <input type="text" id="rule-replacement" placeholder="Replacement text">
+      </div>
+
+      <div class="modal-actions">
+        <button id="cancel-rule" class="action-btn secondary">Cancel</button>
+        <button id="save-rule" class="action-btn primary">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="import-file-input" accept=".json" style="display: none;">
+
+  <script src="../bundled/sidepanel.js"></script>
+</body>
+</html>
