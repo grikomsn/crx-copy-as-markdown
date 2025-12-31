@@ -12,6 +12,26 @@ interface Settings {
   imageHandling: 'keep' | 'skip';
   includePageTitle: boolean;
   includeSourceUrl: boolean;
+  textReplacements: TextReplacementConfig;
+}
+
+interface TextReplacementConfig {
+  pre: TextReplacementGroup;
+  post: TextReplacementGroup;
+}
+
+interface TextReplacementGroup {
+  enabled: boolean;
+  rules: TextReplacementRule[];
+}
+
+interface TextReplacementRule {
+  id: string;
+  enabled: boolean;
+  scope: 'all' | 'selection' | 'page' | 'link';
+  useRegex: boolean;
+  pattern: string;
+  replacement: string;
 }
 
 // Message types
