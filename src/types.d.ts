@@ -56,6 +56,7 @@ declare function toMarkdown(html: string, options?: Partial<Settings>): string;
 declare namespace toMarkdown {
   function createMarkdownConverter(options?: Partial<Settings>): TurndownService;
   function escapeText(str: string): string;
+  function fromElement(element: Element, options?: Partial<Settings>): string;
 }
 
 // TurndownService type (simplified)
@@ -70,6 +71,7 @@ declare global {
     toMarkdown: typeof toMarkdown & {
       createMarkdownConverter: typeof toMarkdown.createMarkdownConverter;
       escapeText: typeof toMarkdown.escapeText;
+      fromElement: typeof toMarkdown.fromElement;
     };
   }
 }
