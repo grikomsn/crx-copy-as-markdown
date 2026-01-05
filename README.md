@@ -1,7 +1,7 @@
 # Copy as Markdown
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Chrome Web Store](https://img.shields.io/badge/Chrome-Web%20Store-blue?logo=google-chrome)](https://github.com/grikomsn/crx-copy-as-markdown)
+[![Chrome Web Store](https://img.shields.io/badge/Chrome-Web%20Store-blue?logo=google-chrome)](https://chromewebstore.google.com/detail/copy-as-markdown/clgbnccbpmdcbfjfkfhiajhepajpjdnc)
 [![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](https://github.com/grikomsn/crx-copy-as-markdown/releases)
 
 <img src=".github/assets/thumbnail.png" alt="Copy as Markdown" width="400" align="right">
@@ -28,6 +28,10 @@ A Chrome extension that adds context menu options to copy web pages, selections,
 
 ## Installation
 
+### From Chrome Web Store
+
+<https://chromewebstore.google.com/detail/copy-as-markdown/clgbnccbpmdcbfjfkfhiajhepajpjdnc>
+
 ### From Source (Developer Mode)
 
 1. Clone or download this repository:
@@ -43,10 +47,6 @@ A Chrome extension that adds context menu options to copy web pages, selections,
 4. Click "Load unpacked"
 
 5. Select the `crx-copy-as-markdown` folder
-
-### From Chrome Web Store
-
-_(Coming soon)_
 
 ## Usage
 
